@@ -336,3 +336,133 @@ class Cnn6_60k(Cnn):
             channels=[64, 128, 128, 128],
             spec_augment=spec_aug,
         )
+
+class Cnn_kd(nn.Module):
+    def __init__(
+        self,
+        mel_bins=256,
+        channels=[64, 128, 128, 128],
+        nb_classes=10,
+        nb_classes2 = 3,
+        dropout=0,
+        spec_augment=None,
+    ):
+        """
+
+        :param mel_bins:
+        :param channels:
+        :param nb_classes:
+        :param dropout:
+        :param spec_augment:
+        """
+        super(Cnn_kd, self).__init__()
+
+        # Normalise mel spectrogram
+        self.bn0 = nn.BatchNorm2d(mel_bins)
+
+        # Spec augmenter
+        if spec_augment is None:
+            self.spec_augmenter = nn.Identity()
+        else:
+            self.spec_augmenter = SpecAugmentation(
+                time_drop_width=spec_augment[0],
+                time_stripes_num=spec_augment[1],
+                freq_drop_width=spec_augment[2],
+                freq_stripes_num=spec_augment[3],
+            )
+
+        # Conv. net
+        self.conv1 = SepConv(1, channels[0])
+        self.conv2 = SepConv(channels[0], channels[1])
+        self.conv3 = SepConv(channels[1], channels[2])
+        self.conv4 = SepConv(channels[2], channels[3])
+
+        # Classifier
+        self.dropout1 = nn.Dropout(dropout)
+        self.fc1 = nn.Linear(channels[3], channels[3], bias=True)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout2 = nn.Dropout(dropout)
+        self.fc2 = nn.Linear(channels[3], nb_classes, bias=True)
+        self.fc3 = nn.Linear(channels[3], nb_classes2, bias=True)
+
+    def merge_conv_bn(self):
+        """
+
+        :return:
+        """
+
+        # --- Replace first batch norm with affine layer
+        # Compute scale and shift from batch norm parameters
+        scale = self.bn0.weight / torch.sqrt(self.bn0.running_var)
+        bias = self.bn0.bias - scale * self.bn0.running_mean
+        # Define affine layer
+        self.bn0 = Affine2D(scale.shape[0]).to(scale.device)
+        self.bn0.weight.data[0, :, 0, 0] = scale.data
+        self.bn0.bias.data[0, :, 0, 0] = bias.data
+
+        # --- Process conv layers
+        self.conv1.merge_conv_bn()
+        self.conv2.merge_conv_bn()
+        self.conv3.merge_conv_bn()
+        self.conv4.merge_conv_bn()
+
+    def get_nb_parameters(self):
+        """
+
+        :return:
+        """
+        p = [p.numel() for p in self.state_dict().values()]
+        return sum(p)
+
+    def forward(self, x):
+        """
+
+        :param x:
+        :return:
+        """
+        """Input size - (batch_size, 1, time_steps, mel_bins)  """
+
+        # Normalise mel spectrogram
+        x = x.transpose(1, 3)
+        x = self.bn0(x)
+        x = x.transpose(1, 3)
+
+        # Masking
+        x = self.spec_augmenter(x)
+
+        # Convolutions
+        feat1 = self.conv1(x)
+        feat2 = self.conv2(feat1)
+        feat3 = self.conv3(feat2)
+        feat4 = self.conv4(feat3)
+
+        # Classifier
+        x = torch.mean(feat4, dim=3)
+        (x1, _) = torch.max(x, dim=2)
+        x2 = torch.mean(x, dim=2)
+        x = x1 + x2
+        x = self.dropout1(x)
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.dropout2(x)
+        y = self.fc2(x)
+        z = self.fc3(x)
+
+        #y correspond au label général et z correspond au label des grosses classes
+
+        return y, z
+
+class Cnn6_60k_KD(Cnn_kd):
+    def __init__(self, dropout, spec_aug):
+        """
+
+        :param dropout:
+        :param spec_aug:
+        """
+        super(Cnn6_60k_KD, self).__init__(
+            dropout=dropout,
+            nb_classes=10,
+            nb_classes2=3,
+            channels=[64, 128, 128, 128],
+            spec_augment=spec_aug,
+        )

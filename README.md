@@ -1,11 +1,3 @@
-# DL-DIY potential project ideas
-- check out challenge description [[here](http://dcase.community/challenge2021/task-acoustic-scene-classification#subtask-a)]
-- take into consideration information of different sensors during training, e.g. [[residual normalization](https://dcase.community/documents/challenge2021/technical_reports/DCASE2021_Kim_36_t1.pdf)]
-- train a larger network and then compress it into a smaller one with pruning, distillation or lottery ticket hypothesis, [[example](https://dcase.community/documents/challenge2021/technical_reports/DCASE2021_Yang_124_t1.pdf)]
-- train over multiple domaines using adversarial domain adaptation [[ref](https://dcase.community/documents/challenge2021/technical_reports/DCASE2021_Koutini_112_t1.pdf)]
-- train network in a multi-task manner, e.g., adding new granularity of classes [[ref](https://dcase.community/documents/challenge2021/technical_reports/DCASE2021_Heo_30_t1.pdf)]
-
------------------
 ## Separable convolutions and test-time augmentations for low-complexity and calibrated acoustic scene classification (DCASE21 Challenge)
 
 [**SEPARABLE CONVOLUTIONS AND TEST-TIME AUGMENTATIONS FOR LOW-COMPLEXITY AND CALIBRATED ACOUSTIC SCENE CLASSIFICATION**]() 

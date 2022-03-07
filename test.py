@@ -1,10 +1,10 @@
 import argparse
 import os
 import yaml
-from sp4asc.datasets.dcase import DCaseDataset
+from sp4asc.datasets.dcase import DCaseDataset, DCaseDataset2
 from sp4asc.models import get_net
 from sp4asc.models.cnns import LogMelSpectrogram
-from sp4asc.testing import TestManager
+from sp4asc.testing import TestManager, TestManagerKD
 
 
 if __name__ == "__main__":
@@ -44,11 +44,20 @@ if __name__ == "__main__":
 
     # --- Datasets
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    val_dataset = DCaseDataset(
+    '''val_dataset = DCaseDataset(
         current_dir + "/data/TAU-urban-acoustic-scenes-2020-mobile-development/",
         split="val",
     )
     test_dataset = DCaseDataset(
+        current_dir + "/data/TAU-urban-acoustic-scenes-2021-mobile-evaluation/",
+        split="test",
+    )'''
+
+    val_dataset2 = DCaseDataset2(
+        current_dir + "/data/TAU-urban-acoustic-scenes-2020-mobile-development/",
+        split="val",
+    )
+    test_dataset2 = DCaseDataset2(
         current_dir + "/data/TAU-urban-acoustic-scenes-2021-mobile-evaluation/",
         split="test",
     )
@@ -61,7 +70,7 @@ if __name__ == "__main__":
     print("Nb. of parameters at training time: ", net.get_nb_parameters() / 1e3, "k")
 
     # --- Test
-    mng = TestManager(
+    '''mng = TestManager(
         net,
         spectrogram,
         val_dataset,
@@ -71,7 +80,19 @@ if __name__ == "__main__":
     mng.test(
         basename_results=args.out_name,
         nb_augmentations=args.nb_aug,
+    )'''
+    mngkd = TestManagerKD(
+        net,
+        spectrogram,
+        val_dataset2,
+        test_dataset2,
+        path2model=path2model,
     )
+    mngkd.test(
+        basename_results=args.out_name,
+        nb_augmentations=args.nb_aug,
+    )
+
 
     # --- Complete submission information
     # Augmentations used
