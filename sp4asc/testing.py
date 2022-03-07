@@ -225,10 +225,10 @@ class TestManager:
 
             # Data
             sound = batch[0].to(self.dev, non_blocking=True)
-            filenames.extend(batch[2])
+            filenames.extend(batch[3])
             if split == "val":
                 y_gt.append(batch[1])
-                devices.append(batch[3])
+                devices.append(batch[4])
 
             # Get network outputs
             sound = self.spectrogram(sound)
@@ -564,10 +564,12 @@ class TestManagerKD:
             if nb_augmentations > 0:
                 pred_class = 0
                 for _ in range(nb_augmentations):
-                    pred_class += torch.softmax(self.net(sound), dim=1)
+                    pred_class , _ = self.net(sound)
+                    pred_class += torch.softmax(pred_class, dim=1)
                 pred_class = pred_class / nb_augmentations
             else:
-                pred_class = torch.softmax(self.net(sound), dim=1)
+                pred_class , _ = self.net(sound)
+                pred_class = torch.softmax(pred_class, dim=1)
 
             # Log
             y_pred.append(pred_class.cpu().numpy())

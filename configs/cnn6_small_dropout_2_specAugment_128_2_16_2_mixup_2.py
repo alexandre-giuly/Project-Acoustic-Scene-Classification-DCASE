@@ -2,7 +2,7 @@ config = {
     "batchsize": 32,
     "num_workers": 4,
     "reload": False,
-    "net": "Cnn6_60k_KD",
+    "net": "Cnn6_60k",
     "dropout": 0.2,
     "specAugment": [128, 2, 16, 2],
     "lr": 1e-3,

@@ -38,7 +38,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # --- Load config file
-    name_config = args.config.replace(".py", "").replace(os.path.sep, ".")
+    name_config = args.config.replace(".py", "").replace("/", ".")
     config = __import__(name_config, fromlist=["config"]).config
     path2model = os.path.join(config["out_dir"], name_config)
 
@@ -54,11 +54,11 @@ if __name__ == "__main__":
     )'''
 
     val_dataset2 = DCaseDataset2(
-        current_dir + "/data/TAU-urban-acoustic-scenes-2020-mobile-development/",
+        os.path.join(current_dir , "data/TAU-urban-acoustic-scenes-2020-mobile-development/").replace("\\", "/"),
         split="val",
     )
     test_dataset2 = DCaseDataset2(
-        current_dir + "/data/TAU-urban-acoustic-scenes-2021-mobile-evaluation/",
+        os.path.join(current_dir , "data/TAU-urban-acoustic-scenes-2020-mobile-development/").replace("\\", "/"),
         split="test",
     )
 
@@ -70,18 +70,18 @@ if __name__ == "__main__":
     print("Nb. of parameters at training time: ", net.get_nb_parameters() / 1e3, "k")
 
     # --- Test
-    '''mng = TestManager(
+    mng = TestManager(
         net,
         spectrogram,
-        val_dataset,
-        test_dataset,
+        val_dataset2,
+        test_dataset2,
         path2model=path2model,
     )
     mng.test(
         basename_results=args.out_name,
         nb_augmentations=args.nb_aug,
-    )'''
-    mngkd = TestManagerKD(
+    )
+    '''mngkd = TestManagerKD(
         net,
         spectrogram,
         val_dataset2,
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     mngkd.test(
         basename_results=args.out_name,
         nb_augmentations=args.nb_aug,
-    )
+    )'''
 
 
     # --- Complete submission information
